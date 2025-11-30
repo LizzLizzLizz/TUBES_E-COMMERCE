@@ -1,0 +1,105 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  name             String?
+  email            String    @unique
+  password         String
+  phone            String?
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  city             String?
+  province         String?
+  postalCode       String?
+  role             Role      @default(USER)
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  orders           Order[]
+}
+
+model Product {
+  id              String          @id @default(cuid())
+  name            String
+  description     String
+  price           Float
+  stock           Int
+  images          String      // Changed from String[] to String for SQLite compatibility
+  categoryId      String
+  category        Category    @relation(fields: [categoryId], references: [id])
+  variantType     String?     // e.g., "Color", "Size", null if no variants
+  variants        Variant[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  orderItems      OrderItem[]
+}
+
+model Variant {
+  id         String      @id @default(cuid())
+  productId  String
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name       String      // e.g., "Red", "Blue", "Small", "Large"
+  stock      Int         @default(0)
+  orderItems OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Order {
+  id         String      @id @default(cuid())
+  userId     String
+  user       User        @relation(fields: [userId], references: [id])
+  status     OrderStatus @default(UNPAID)
+  items      OrderItem[]
+  total      Float
+  address    String
+  expiryTime DateTime?   // Order expiry time for auto-cancel (15 minutes from creation)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  quantity    Int
+  price       Float
+  variantId   String?  // ID of selected variant (null if no variant)
+  variantName String?  // Store selected variant name for display
+  variant     Variant? @relation(fields: [variantId], references: [id])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  UNPAID
+  PAID
+  PACKED
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}

@@ -1,0 +1,17 @@
+/* Hide cart and login buttons on auth pages */
+.auth-layout ~ * header nav > div {
+  justify-content: center !important;
+}
+
+.auth-layout ~ * header nav > div > div:last-child {
+  display: none !important;
+}
+
+/* Alternative: target from body */
+body:has(.auth-layout) header nav > div {
+  justify-content: center !important;
+}
+
+body:has(.auth-layout) header nav > div > div:last-child {
+  display: none !important;
+}

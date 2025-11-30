@@ -1,65 +1,118 @@
-import Image from "next/image";
+import { PrismaClient } from '@prisma/client';
+import Image from 'next/image';
+import Link from 'next/link';
+// @ts-ignore - TypeScript cache issue with new component
+import BannerCarousel from '@/components/BannerCarousel';
 
-export default function Home() {
+const prisma = new PrismaClient();
+
+export default async function Home() {
+  // Fetch categories from database
+  const categories = await prisma.category.findMany({
+    orderBy: { createdAt: 'asc' },
+    take: 5,
+  });
+
+  // Fetch all products
+  const products = await prisma.product.findMany({
+    include: {
+      category: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: 20, // Limit to 20 products per page
+  });
+
+  // Map categories to images (order: Apparel/Merch, Marker/Ink, Nozzle/Caps, Sketchbook, Spray Paint)
+  const categoryImages = [
+    'https://drive.google.com/uc?export=view&id=18MV2Dm2Y2_9-kKvpY7XADFNSenOtg0Dr', // Apparel/Merch (1st)
+    'https://drive.google.com/uc?export=view&id=1Xps0eQ347TSzPdEbYGuCleZefOTjNyZy', // Marker and Ink (2nd)
+    'https://drive.google.com/uc?export=view&id=18vpYarnJL8c5Cmt5XU3CzQ4HjZrKuRSQ', // Nozzle/Caps (3rd)
+    'https://drive.google.com/uc?export=view&id=1If4aAjuk013mi7pTkJv99GgbUHRgzlv6', // Sketchbook (4th)
+    'https://drive.google.com/uc?export=view&id=1FQaNhXd97rPIiIYkDpNZnfwY0-vdp9_S', // Spray Paint (5th)
+  ];
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+    <div className="space-y-12 sm:space-y-16 pb-12 sm:pb-16">
+      {/* Hero Section - Banner Carousel */}
+      <section className="relative -mx-4 sm:-mx-6 lg:-mx-8">
+        <BannerCarousel />
+      </section>
+
+      {/* Kategori */}
+      <section className="space-y-6 sm:space-y-8">
+        <h2 className="text-center text-5xl sm:text-6xl font-normal text-gray-900" style={{ fontFamily: 'Aerosol Soldier' }}>Kategori</h2>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-5 lg:gap-6">
+          {categories.map((category, index) => (
+            <CategoryCard
+              key={category.id}
+              image={categoryImages[index]}
+              categoryId={category.id}
+            />
+          ))}
+        </div>
+      </section>
+
+      {/* All Products */}
+      <section className="space-y-6 sm:space-y-8">
+        <div className="flex flex-col items-center justify-center">
+          <h2 className="text-center text-5xl sm:text-6xl font-normal text-gray-900" style={{ fontFamily: 'Aerosol Soldier' }}>Semua Produk</h2>
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+        <div className="flex justify-center">
+          <Link href="/products" className="text-sm sm:text-base text-blue-600 hover:text-blue-800 font-medium">
+            Lihat Semua →
+          </Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function CategoryCard({ image, categoryId }: { image: string; categoryId: string }) {
+  return (
+    <Link href={`/products?category=${categoryId}`} className="group overflow-hidden rounded-lg block shadow-md hover:shadow-xl transition-shadow">
+      <div className="relative h-40 sm:h-48 md:h-52 lg:h-56">
         <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+          src={image}
+          alt="Kategori"
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-110"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+      </div>
+    </Link>
+  );
+}
+
+function ProductCard({ product }: { product: any }) {
+  return (
+    <Link href={`/products/${product.id}`} className="group">
+      <div className="bg-white rounded-lg shadow-sm hover:shadow-lg transition-shadow overflow-hidden">
+        <div className="relative aspect-square">
+          <Image
+            src={product.images || '/placeholder.png'}
+            alt={product.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
+        <div className="p-3 sm:p-4">
+          <h3 className="font-semibold text-sm sm:text-base text-gray-900 mb-1 line-clamp-2 group-hover:text-blue-600">
+            {product.name}
+          </h3>
+          <p className="text-xs sm:text-sm text-gray-500 mb-2">{product.category.name}</p>
+          <p className="text-base sm:text-lg font-bold text-gray-900">
+            {new Intl.NumberFormat('id-ID', {
+              style: 'currency',
+              currency: 'IDR',
+              minimumFractionDigits: 0,
+            }).format(product.price)}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </div>
+    </Link>
   );
 }
