@@ -82,11 +82,19 @@ export default async function RootLayout({
             {children}
           </main>
 
-          <footer className="bg-white mt-auto">
+          <footer className="bg-white mt-auto border-t border-gray-200">
             <div className="max-w-7xl mx-auto py-6 sm:py-8 lg:py-12 px-4 sm:px-6 lg:px-8">
-              <p className="text-center text-xs sm:text-sm text-gray-500">
-                © 2025 PERON.ID. All rights reserved.
-              </p>
+              <div className="text-center space-y-2">
+                <p className="text-xs sm:text-sm text-gray-500">
+                  Educational Project
+                </p>
+                <p className="text-xs text-gray-400">
+                  Built for academic purposes | E-Commerce Course Assignment
+                </p>
+                <p className="text-xs text-gray-400">
+                  Images and resources from various internet sources for educational use only
+                </p>
+              </div>
             </div>
           </footer>
         </Providers>
