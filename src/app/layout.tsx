@@ -4,7 +4,7 @@ import "./globals.css";
 import Link from 'next/link';
 import Image from 'next/image';
 import { getServerSession } from 'next-auth';
-import { authOptions } from './api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { UserIcon } from '@heroicons/react/24/outline';
 import Providers from '@/components/Providers';
 import CartBadge from '@/components/CartBadge';
