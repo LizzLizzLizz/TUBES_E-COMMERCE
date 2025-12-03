@@ -139,8 +139,9 @@ export default function SearchBar() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex-1 max-w-md mx-4" ref={suggestionsRef}>
-      <div className="relative">
+    <div className="flex-1 max-w-md mx-4" ref={suggestionsRef}>
+      <form onSubmit={handleSubmit}>
+        <div className="relative">
         <input
           ref={inputRef}
           type="text"
@@ -212,7 +213,8 @@ export default function SearchBar() {
             )}
           </div>
         )}
-      </div>
-    </form>
+        </div>
+      </form>
+    </div>
   );
 }
