@@ -55,10 +55,10 @@ export async function POST(request: Request) {
       data: { status: newStatus },
     });
 
-    console.log(`Order ${body.order_id} updated to status: ${status}`);
+    console.log(`Order ${order_id} updated to status: ${newStatus}`);
 
     return successResponse(
-      { order_id: body.order_id, status },
+      { order_id, status: newStatus },
       'Webhook processed successfully'
     );
   } catch (error) {
