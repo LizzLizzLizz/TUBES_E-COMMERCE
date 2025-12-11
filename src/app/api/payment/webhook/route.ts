@@ -2,9 +2,18 @@ import prisma from '@/lib/prisma';
 import { successResponse, errorResponse } from '@/lib/apiResponse';
 import crypto from 'crypto';
 
+// Add GET handler for health check (Midtrans test)
+export async function GET() {
+  return Response.json({ status: 'ok', message: 'Webhook endpoint is active' });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    
+    // Log incoming webhook for debugging
+    console.log('Webhook received:', JSON.stringify(body, null, 2));
+    
     const {
       order_id,
       transaction_status,
@@ -12,6 +21,12 @@ export async function POST(request: Request) {
       signature_key,
       gross_amount,
     } = body;
+
+    // Handle Midtrans test notification
+    if (!order_id || !transaction_status) {
+      console.log('Test notification or missing required fields');
+      return Response.json({ status: 'ok', message: 'Test notification received' });
+    }
 
     // Verify signature
     const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
