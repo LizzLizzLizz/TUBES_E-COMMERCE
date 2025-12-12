@@ -65,16 +65,19 @@ model Category {
 }
 
 model Order {
-  id         String      @id @default(cuid())
-  userId     String
-  user       User        @relation(fields: [userId], references: [id])
-  status     OrderStatus @default(UNPAID)
-  items      OrderItem[]
-  total      Float
-  address    String
-  expiryTime DateTime?   // Order expiry time for auto-cancel (15 minutes from creation)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(UNPAID)
+  items           OrderItem[]
+  total           Float
+  address         String
+  shippingCost    Float       @default(0)
+  shippingCourier String?
+  shippingService String?
+  expiryTime      DateTime?   // Order expiry time for auto-cancel (15 minutes from creation)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model OrderItem {

@@ -59,7 +59,13 @@ export async function POST(request: Request) {
 
     // Validate and calculate total on server-side
     let calculatedSubtotal = 0;
-    const validatedItems = [];
+    const validatedItems: Array<{
+      productId: string;
+      variantId: string | null;
+      variantName: string | null;
+      quantity: number;
+      price: number;
+    }> = [];
 
     // Check stock availability and validate prices for all items
     for (const item of items) {
