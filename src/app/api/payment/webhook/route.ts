@@ -58,12 +58,23 @@ export async function POST(request: Request) {
     }
 
     // Find order
+    console.log('Searching for order:', order_id);
+    
     const order = await prisma.order.findFirst({
       where: { id: order_id },
     });
 
+    console.log('Order found:', order ? 'YES' : 'NO', order ? { id: order.id, status: order.status } : null);
+
     if (!order) {
       console.error('Order not found:', order_id);
+      // Try to find by payment token as fallback
+      const orderByToken = await prisma.order.findFirst({
+        where: { paymentToken: order_id },
+      });
+      
+      console.log('Order by payment token:', orderByToken ? 'FOUND' : 'NOT FOUND');
+      
       // Return 200 even if order not found - Midtrans expects 200
       return Response.json({ 
         status: 'error', 
@@ -86,12 +97,25 @@ export async function POST(request: Request) {
       newStatus = 'UNPAID';
     }
 
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { status: newStatus },
+    console.log('Updating order:', { 
+      order_id, 
+      old_status: order.status, 
+      new_status: newStatus,
+      transaction_status,
+      fraud_status 
     });
 
-    console.log(`Order ${order_id} updated to status: ${newStatus}`);
+    const updatedOrder = await prisma.order.update({
+      where: { id: order.id },
+      data: { 
+        status: newStatus
+      },
+    });
+
+    console.log(`Order ${order_id} updated successfully:`, {
+      id: updatedOrder.id,
+      status: updatedOrder.status
+    });
 
     // Always return 200 status for Midtrans
     return Response.json({
