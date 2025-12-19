@@ -32,25 +32,40 @@ export async function POST(request: Request) {
     // Verify signature - Midtrans uses status_code NOT transaction_status
     const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
     
-    // Convert gross_amount to proper format (remove decimals if present)
-    const amount = String(gross_amount).split('.')[0];
+    // Try multiple formats for gross_amount
+    const amountInt = String(gross_amount).split('.')[0]; // "170000"
+    const amountOriginal = String(gross_amount); // "170000.00"
     
-    const expectedSignature = crypto
+    // Try signature with integer amount
+    const expectedSignatureInt = crypto
       .createHash('sha512')
-      .update(`${order_id}${status_code}${amount}${serverKey}`)
+      .update(`${order_id}${status_code}${amountInt}${serverKey}`)
       .digest('hex');
+    
+    // Try signature with original amount (with decimals)
+    const expectedSignatureOriginal = crypto
+      .createHash('sha512')
+      .update(`${order_id}${status_code}${amountOriginal}${serverKey}`)
+      .digest('hex');
+
+    const signatureMatch = signature_key === expectedSignatureInt || signature_key === expectedSignatureOriginal;
 
     console.log('Signature verification:', {
       received: signature_key,
-      expected: expectedSignature,
+      expectedInt: expectedSignatureInt,
+      expectedOriginal: expectedSignatureOriginal,
       order_id,
       status_code,
       transaction_status,
-      amount,
-      match: signature_key === expectedSignature
+      amountInt,
+      amountOriginal,
+      serverKey: serverKey.substring(0, 10) + '...',
+      matchInt: signature_key === expectedSignatureInt,
+      matchOriginal: signature_key === expectedSignatureOriginal,
+      match: signatureMatch
     });
 
-    if (signature_key !== expectedSignature) {
+    if (!signatureMatch) {
       console.error('Invalid signature');
       // Return 200 but log the error - Midtrans expects 200 even for invalid signatures
       return Response.json({ 
