@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
@@ -26,10 +28,10 @@ export default function ForgotPasswordPage() {
       const data = await response.json();
 
       if (data.status === 'success') {
-        setMessage('Tautan reset kata sandi telah dikirim ke email Anda. Silakan periksa inbox Anda.');
-        setEmail('');
+        // Redirect to reset password page with email
+        router.push(`/reset-password?email=${encodeURIComponent(email)}`);
       } else {
-        setError(data.message || 'Gagal mengirim email reset');
+        setError(data.message || 'Gagal mengirim kode verifikasi');
       }
     } catch (error) {
       setError('Terjadi kesalahan. Silakan coba lagi.');
@@ -43,7 +45,7 @@ export default function ForgotPasswordPage() {
       <div className="text-center">
         <h1 className="text-4xl sm:text-5xl font-normal" style={{ fontFamily: 'Aerosol Soldier' }}>Lupa Kata Sandi</h1>
         <p className="mt-2 text-gray-600">
-          Masukkan alamat email Anda dan kami akan mengirimkan tautan untuk reset kata sandi
+          Masukkan alamat email Anda dan kami akan mengirimkan kode verifikasi untuk reset kata sandi
         </p>
       </div>
 
@@ -76,7 +78,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Mengirim...' : 'Kirim Tautan Reset'}
+          {isLoading ? 'Mengirim...' : 'Kirim Kode Verifikasi'}
         </Button>
 
         <div className="text-center space-y-2">

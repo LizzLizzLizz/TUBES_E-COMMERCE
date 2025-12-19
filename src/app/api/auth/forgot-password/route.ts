@@ -21,39 +21,36 @@ export async function POST(request: NextRequest) {
     // Always return success (security: don't reveal if email exists)
     // But only send email if user exists
     if (user) {
-      // Generate reset token
-      const resetToken = crypto.randomBytes(32).toString('hex');
+      // Generate 6-digit verification code
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
       const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hour from now
 
-      // Save token to database
+      // Save code to database
       await prisma.user.update({
         where: { email },
         data: {
-          resetToken,
+          resetToken: verificationCode,
           resetTokenExpiry,
         },
       });
-
-      // Create reset URL
-      const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${resetToken}`;
 
       // Send email
       try {
         await sendEmail({
           to: email,
-          subject: 'Reset Kata Sandi - PERON.ID',
-          html: getPasswordResetEmailTemplate(resetUrl, user.name || undefined),
+          subject: 'Kode Verifikasi Reset Kata Sandi - PERON.ID',
+          html: getPasswordResetEmailTemplate(verificationCode, user.name || undefined),
         });
-        console.log('Password reset email sent to:', email);
+        console.log('Password reset code sent to:', email);
       } catch (emailError) {
         console.error('Failed to send email:', emailError);
-        // Log reset URL for development/testing
+        // Log verification code for development/testing
         console.log('\n==============================================');
-        console.log('PASSWORD RESET LINK (Email failed to send)');
+        console.log('VERIFICATION CODE (Email failed to send)');
         console.log('==============================================');
         console.log('Email:', email);
-        console.log('Reset URL:', resetUrl);
-        console.log('Token expires in: 1 hour');
+        console.log('Code:', verificationCode);
+        console.log('Code expires in: 1 hour');
         console.log('==============================================\n');
         // Continue anyway - don't reveal if email sending failed
       }
@@ -61,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     return successResponse(
       null,
-      'If an account exists with that email, a password reset link has been sent',
+      'If an account exists with that email, a verification code has been sent',
       200
     );
   } catch (error) {

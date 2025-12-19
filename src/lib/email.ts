@@ -35,7 +35,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions) {
   }
 }
 
-export function getPasswordResetEmailTemplate(resetUrl: string, userName?: string) {
+export function getPasswordResetEmailTemplate(verificationCode: string, userName?: string) {
   return `
     <!DOCTYPE html>
     <html>
@@ -52,14 +52,20 @@ export function getPasswordResetEmailTemplate(resetUrl: string, userName?: strin
           margin: 0 auto;
           padding: 20px;
         }
-        .button {
-          display: inline-block;
-          padding: 12px 30px;
-          background-color: #000;
-          color: #fff;
-          text-decoration: none;
-          border-radius: 5px;
-          margin: 20px 0;
+        .code-box {
+          background-color: #f5f5f5;
+          border: 2px dashed #333;
+          border-radius: 8px;
+          padding: 20px;
+          text-align: center;
+          margin: 30px 0;
+        }
+        .code {
+          font-size: 36px;
+          font-weight: bold;
+          letter-spacing: 8px;
+          color: #000;
+          font-family: 'Courier New', monospace;
         }
         .footer {
           margin-top: 30px;
@@ -72,14 +78,15 @@ export function getPasswordResetEmailTemplate(resetUrl: string, userName?: strin
     </head>
     <body>
       <div class="container">
-        <h2>Reset Kata Sandi - PERON.ID</h2>
+        <h2>Kode Verifikasi Reset Kata Sandi - PERON.ID</h2>
         ${userName ? `<p>Halo ${userName},</p>` : '<p>Halo,</p>'}
         <p>Kami menerima permintaan untuk reset kata sandi akun Anda di PERON.ID.</p>
-        <p>Klik tombol di bawah ini untuk reset kata sandi Anda:</p>
-        <a href="${resetUrl}" class="button">Reset Kata Sandi</a>
-        <p>Atau salin dan tempel link berikut ke browser Anda:</p>
-        <p style="word-break: break-all; color: #666;">${resetUrl}</p>
-        <p><strong>Link ini akan kadaluarsa dalam 1 jam.</strong></p>
+        <p>Gunakan kode verifikasi berikut untuk reset kata sandi Anda:</p>
+        <div class="code-box">
+          <div class="code">${verificationCode}</div>
+        </div>
+        <p><strong>Kode ini akan kadaluarsa dalam 1 jam.</strong></p>
+        <p>Masukkan kode ini di halaman reset kata sandi untuk melanjutkan.</p>
         <p>Jika Anda tidak meminta reset kata sandi, abaikan email ini. Kata sandi Anda tidak akan berubah.</p>
         <div class="footer">
           <p>Email ini dikirim oleh PERON.ID</p>
