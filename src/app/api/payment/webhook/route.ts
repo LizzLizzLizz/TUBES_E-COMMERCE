@@ -30,14 +30,31 @@ export async function POST(request: Request) {
 
     // Verify signature
     const serverKey = process.env.MIDTRANS_SERVER_KEY || '';
+    
+    // Convert gross_amount to proper format (remove decimals if present)
+    const amount = String(gross_amount).split('.')[0];
+    
     const expectedSignature = crypto
       .createHash('sha512')
-      .update(`${order_id}${transaction_status}${gross_amount}${serverKey}`)
+      .update(`${order_id}${transaction_status}${amount}${serverKey}`)
       .digest('hex');
+
+    console.log('Signature verification:', {
+      received: signature_key,
+      expected: expectedSignature,
+      order_id,
+      transaction_status,
+      amount,
+      match: signature_key === expectedSignature
+    });
 
     if (signature_key !== expectedSignature) {
       console.error('Invalid signature');
-      return errorResponse('Invalid signature', 403);
+      // Return 200 but log the error - Midtrans expects 200 even for invalid signatures
+      return Response.json({ 
+        status: 'error', 
+        message: 'Invalid signature' 
+      }, { status: 200 });
     }
 
     // Find order
@@ -47,7 +64,11 @@ export async function POST(request: Request) {
 
     if (!order) {
       console.error('Order not found:', order_id);
-      return errorResponse('Order not found', 404);
+      // Return 200 even if order not found - Midtrans expects 200
+      return Response.json({ 
+        status: 'error', 
+        message: 'Order not found' 
+      }, { status: 200 });
     }
 
     // Update order status based on transaction status
@@ -72,12 +93,18 @@ export async function POST(request: Request) {
 
     console.log(`Order ${order_id} updated to status: ${newStatus}`);
 
-    return successResponse(
-      { order_id, status: newStatus },
-      'Webhook processed successfully'
-    );
+    // Always return 200 status for Midtrans
+    return Response.json({
+      status: 'success',
+      message: 'Webhook processed successfully',
+      data: { order_id, status: newStatus }
+    }, { status: 200 });
   } catch (error) {
     console.error('Webhook error:', error);
-    return errorResponse('Webhook processing failed', 500);
+    // Always return 200 even on error - Midtrans expects this
+    return Response.json({
+      status: 'error',
+      message: 'Webhook processing failed'
+    }, { status: 200 });
   }
 }
